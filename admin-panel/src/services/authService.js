@@ -1,25 +1,25 @@
-import api from './api';
+import api from "./api";
 
 const login = async (email, password) => {
-    const response = await api.post('/auth/login', { email, password });
-    if (response.data) {
-        localStorage.setItem('admin', JSON.stringify(response.data));
-    }
-    return response.data;
+  const response = await api.post("/auth/login", { email, password });
+  if (response.data) {
+    localStorage.setItem("admin", JSON.stringify(response.data));
+  }
+  return response.data;
 };
 
 const logout = () => {
-    localStorage.removeItem('admin');
+  localStorage.removeItem("admin");
 };
 
 const getCurrentAdmin = () => {
-    return JSON.parse(localStorage.getItem('admin'));
+  return JSON.parse(localStorage.getItem("admin"));
 };
 
 const authService = {
-    login,
-    logout,
-    getCurrentAdmin,
+  login,
+  logout,
+  getCurrentAdmin,
 };
 
 export default authService;

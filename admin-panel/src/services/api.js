@@ -1,36 +1,19 @@
-import axios from 'axios';
+import axios from "axios";
 
 const api = axios.create({
-    baseURL: 'http://localhost:5000/api',
+  baseURL: "http://localhost:5000/api", // Backend URL
 });
 
-// Request Interceptor: Attach Admin Token
+// Add a request interceptor to attach the token
 api.interceptors.request.use(
-    (config) => {
-        const adminFn = localStorage.getItem('admin');
-        if (adminFn) {
-            const token = JSON.parse(adminFn).token;
-            if (token) {
-                config.headers.Authorization = `Bearer ${token}`;
-            }
-        }
-        return config;
-    },
-    (error) => Promise.reject(error)
-);
-
-// Response Interceptor: Handle 401
-api.interceptors.response.use(
-    (response) => response,
-    (error) => {
-        if (error.response && error.response.status === 401) {
-            localStorage.removeItem('admin');
-            if (window.location.pathname !== '/login') {
-                window.location.href = '/login';
-            }
-        }
-        return Promise.reject(error);
+  (config) => {
+    const admin = JSON.parse(localStorage.getItem("admin"));
+    if (admin && admin.token) {
+      config.headers.Authorization = `Bearer ${admin.token}`;
     }
+    return config;
+  },
+  (error) => Promise.reject(error),
 );
 
 export default api;

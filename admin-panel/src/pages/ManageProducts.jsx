@@ -1,105 +1,107 @@
-import React, { useEffect, useState } from 'react';
-import api from '../services/api';
-import { Plus, Edit, Trash2 } from 'lucide-react';
-import { Link } from 'react-router-dom';
-import toast from 'react-hot-toast';
+import { useEffect, useState } from "react";
+import api from "../services/api";
+import { toast } from "react-toastify";
+import { FaTrash, FaEdit } from "react-icons/fa";
 
 const ManageProducts = () => {
-    const [products, setProducts] = useState([]);
-    const [loading, setLoading] = useState(true);
+  const [products, setProducts] = useState([]);
 
-    const fetchProducts = async () => {
-        try {
-            const { data } = await api.get('/products');
-            setProducts(data);
-        } catch (error) {
-            toast.error('Failed to load products');
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    useEffect(() => {
-        fetchProducts();
-    }, []);
-
-    const handleDelete = async (id) => {
-        if (!window.confirm("Are you sure you want to delete this product?")) return;
-
-        try {
-            await api.delete(`/products/${id}`);
-            toast.success("Product Deleted");
-            fetchProducts();
-        } catch (error) {
-            toast.error("Failed to delete product");
-        }
+  const fetchProducts = async () => {
+    try {
+      const { data } = await api.get("/products");
+      setProducts(data);
+    } catch (error) {
+      toast.error("Failed to load products");
     }
+  };
 
-    if (loading) return <div>Loading...</div>;
+  useEffect(() => {
+    fetchProducts();
+  }, []);
 
-    return (
-        <div>
-            <div className="flex justify-between items-center mb-6">
-                <h1 className="text-2xl font-bold text-gray-800">Products</h1>
-                <Link
-                    to="/add-product"
-                    className="bg-primary text-white text-sm font-medium px-4 py-2 rounded-lg hover:bg-primary-hover flex items-center transition-colors"
-                >
-                    <Plus size={18} className="mr-2" />
-                    Add Product
-                </Link>
-            </div>
+  const handleDelete = async (id) => {
+    if (window.confirm("Are you sure you want to delete this product?")) {
+      try {
+        await api.delete(`/products/${id}`);
+        toast.success("Product deleted");
+        fetchProducts();
+      } catch (error) {
+        toast.error("Failed to delete product");
+      }
+    }
+  };
 
-            <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
-                <div className="overflow-x-auto">
-                    <table className="min-w-full divide-y divide-gray-200">
-                        <thead className="bg-gray-50">
-                            <tr>
-                                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Image</th>
-                                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
-                                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Price</th>
-                                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Category</th>
-                                <th scope="col" className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody className="bg-white divide-y divide-gray-200">
-                            {products.map((product) => (
-                                <tr key={product._id} className="hover:bg-gray-50 transition-colors">
-                                    <td className="px-6 py-4 whitespace-nowrap">
-                                        <div className="h-10 w-10 flex-shrink-0">
-                                            {product.image ? (
-                                                <img className="h-10 w-10 rounded-full object-cover" src={product.image} alt="" />
-                                            ) : (
-                                                <div className="h-10 w-10 rounded-full bg-gray-200" />
-                                            )}
-                                        </div>
-                                    </td>
-                                    <td className="px-6 py-4 whitespace-nowrap">
-                                        <div className="text-sm font-medium text-gray-900">{product.name}</div>
-                                    </td>
-                                    <td className="px-6 py-4 whitespace-nowrap">
-                                        <div className="text-sm text-gray-500">₹{product.price}</div>
-                                    </td>
-                                    <td className="px-6 py-4 whitespace-nowrap">
-                                        <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">
-                                            {product.category}
-                                        </span>
-                                    </td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                                        <div className="flex justify-end space-x-3">
-                                            {/* Edit functionality to be implemented, adding placeholder button */}
-                                            <button className="text-primary hover:text-blue-900"><Edit size={18} /></button>
-                                            <button onClick={() => handleDelete(product._id)} className="text-red-500 hover:text-red-900"><Trash2 size={18} /></button>
-                                        </div>
-                                    </td>
-                                </tr>
-                            ))}
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
-    );
+  return (
+    <div>
+      <h2 className="text-3xl font-bold mb-6 text-gray-800">Manage Products</h2>
+
+      <div className="overflow-x-auto bg-white rounded shadow">
+        <table className="min-w-full leading-normal">
+          <thead>
+            <tr>
+              <th className="px-5 py-3 border-b-2 border-gray-200 bg-gray-100 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                Image
+              </th>
+              <th className="px-5 py-3 border-b-2 border-gray-200 bg-gray-100 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                Name
+              </th>
+              <th className="px-5 py-3 border-b-2 border-gray-200 bg-gray-100 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                Price
+              </th>
+              <th className="px-5 py-3 border-b-2 border-gray-200 bg-gray-100 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                Stock
+              </th>
+              <th className="px-5 py-3 border-b-2 border-gray-200 bg-gray-100 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                Actions
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            {products.map((product) => (
+              <tr key={product._id}>
+                <td className="px-5 py-5 border-b border-gray-200 bg-white text-sm">
+                  <img
+                    src={`http://localhost:5000/${product.image.replace(/\\/g, "/")}`}
+                    alt={product.name}
+                    className="w-16 h-16 object-cover rounded"
+                  />
+                </td>
+                <td className="px-5 py-5 border-b border-gray-200 bg-white text-sm">
+                  <p className="text-gray-900 whitespace-no-wrap">
+                    {product.name}
+                  </p>
+                  <p className="text-gray-500 text-xs">{product.category}</p>
+                </td>
+                <td className="px-5 py-5 border-b border-gray-200 bg-white text-sm">
+                  <p className="text-gray-900 whitespace-no-wrap">
+                    ₹{product.price}
+                  </p>
+                </td>
+                <td className="px-5 py-5 border-b border-gray-200 bg-white text-sm">
+                  <p className="text-gray-900 whitespace-no-wrap">
+                    {product.stock} {product.unit}
+                  </p>
+                </td>
+                <td className="px-5 py-5 border-b border-gray-200 bg-white text-sm">
+                  <div className="flex space-x-3">
+                    <button className="text-blue-600 hover:text-blue-900">
+                      <FaEdit />
+                    </button>
+                    <button
+                      onClick={() => handleDelete(product._id)}
+                      className="text-red-600 hover:text-red-900"
+                    >
+                      <FaTrash />
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
 };
 
 export default ManageProducts;

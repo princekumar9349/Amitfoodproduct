@@ -1,93 +1,114 @@
-import React, { useEffect, useState } from 'react';
-import api from '../services/api';
-import toast from 'react-hot-toast';
+import { useEffect, useState } from "react";
+import api from "../services/api";
+import { toast } from "react-toastify";
 
 const Orders = () => {
-    const [orders, setOrders] = useState([]);
-    const [loading, setLoading] = useState(true);
+  const [orders, setOrders] = useState([]);
 
-    const fetchOrders = async () => {
-        try {
-            const { data } = await api.get('/orders');
-            setOrders(data);
-        } catch (error) {
-            toast.error("Failed to load orders");
-        } finally {
-            setLoading(false);
-        }
-    };
+  const fetchOrders = async () => {
+    try {
+      const { data } = await api.get("/orders");
+      setOrders(data);
+    } catch (error) {
+      toast.error("Failed to load orders");
+    }
+  };
 
-    useEffect(() => {
-        fetchOrders();
-    }, []);
+  useEffect(() => {
+    fetchOrders();
+  }, []);
 
-    const handleStatusUpdate = async (id, status) => {
-        try {
-            await api.put(`/orders/${id}/status`, { status });
-            toast.success("Order status updated");
-            fetchOrders();
-        } catch (error) {
-            toast.error("Failed to update status");
-        }
-    };
+  const handleStatusChange = async (id, status) => {
+    try {
+      await api.put(`/orders/${id}/status`, { status });
+      toast.success(`Order marked as ${status}`);
+      fetchOrders();
+    } catch (error) {
+      toast.error("Failed to update status");
+    }
+  };
 
-    if (loading) return <div>Loading...</div>;
+  return (
+    <div>
+      <h2 className="text-3xl font-bold mb-6 text-gray-800">Orders</h2>
 
-    return (
-        <div>
-            <h1 className="text-2xl font-bold text-gray-800 mb-6">Orders</h1>
-
-            <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
-                <div className="overflow-x-auto">
-                    <table className="min-w-full divide-y divide-gray-200">
-                        <thead className="bg-gray-50">
-                            <tr>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Order ID</th>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Customer</th>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Total</th>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody className="bg-white divide-y divide-gray-200">
-                            {orders.map((order) => (
-                                <tr key={order._id} className="hover:bg-gray-50">
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm font-mono text-gray-500">{order._id.substring(0, 8)}...</td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{order.user?.name || "Guest"}</td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">₹{order.totalAmount}</td>
-                                    <td className="px-6 py-4 whitespace-nowrap">
-                                        <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full
-                                            ${order.status === 'Delivered' ? 'bg-green-100 text-green-800' :
-                                                order.status === 'Cancelled' ? 'bg-red-100 text-red-800' :
-                                                    'bg-yellow-100 text-yellow-800'
-                                            }`}>
-                                            {order.status || 'Processing'}
-                                        </span>
-                                    </td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                        {new Date(order.createdAt).toLocaleDateString()}
-                                    </td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                        <select
-                                            value={order.status || 'Processing'}
-                                            onChange={(e) => handleStatusUpdate(order._id, e.target.value)}
-                                            className="block w-full py-1 px-2 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary sm:text-xs"
-                                        >
-                                            <option value="Processing">Processing</option>
-                                            <option value="Shipped">Shipped</option>
-                                            <option value="Delivered">Delivered</option>
-                                            <option value="Cancelled">Cancelled</option>
-                                        </select>
-                                    </td>
-                                </tr>
-                            ))}
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
-    );
+      <div className="bg-white rounded shadow overflow-x-auto">
+        <table className="min-w-full leading-normal">
+          <thead>
+            <tr>
+              <th className="px-5 py-3 border-b-2 border-gray-200 bg-gray-100 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                Order ID
+              </th>
+              <th className="px-5 py-3 border-b-2 border-gray-200 bg-gray-100 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                Customer
+              </th>
+              <th className="px-5 py-3 border-b-2 border-gray-200 bg-gray-100 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                Address
+              </th>
+              <th className="px-5 py-3 border-b-2 border-gray-200 bg-gray-100 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                Items
+              </th>
+              <th className="px-5 py-3 border-b-2 border-gray-200 bg-gray-100 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                Total
+              </th>
+              <th className="px-5 py-3 border-b-2 border-gray-200 bg-gray-100 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                Status
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            {orders.map((order) => (
+              <tr key={order._id}>
+                <td className="px-5 py-5 border-b border-gray-200 bg-white text-sm">
+                  {order._id.substring(0, 8)}...
+                </td>
+                <td className="px-5 py-5 border-b border-gray-200 bg-white text-sm">
+                  {order.userId}{" "}
+                  {/* Since User model isn't populated properly in backend yet, just ID or fix backend later */}
+                </td>
+                <td className="px-5 py-5 border-b border-gray-200 bg-white text-sm">
+                  {order.address}
+                </td>
+                <td className="px-5 py-5 border-b border-gray-200 bg-white text-sm">
+                  {order.products.map((p, i) => (
+                    <div key={i}>
+                      {p.productId?.name} x {p.quantity}
+                    </div>
+                  ))}
+                </td>
+                <td className="px-5 py-5 border-b border-gray-200 bg-white text-sm">
+                  ₹{order.totalAmount}
+                </td>
+                <td className="px-5 py-5 border-b border-gray-200 bg-white text-sm">
+                  <select
+                    value={order.orderStatus}
+                    onChange={(e) =>
+                      handleStatusChange(order._id, e.target.value)
+                    }
+                    className={`p-2 rounded border font-semibold 
+                                            ${
+                                              order.orderStatus === "Delivered"
+                                                ? "text-green-600 bg-green-100"
+                                                : order.orderStatus ===
+                                                    "Cancelled"
+                                                  ? "text-red-600 bg-red-100"
+                                                  : "text-yellow-600 bg-yellow-100"
+                                            }`}
+                  >
+                    <option value="Pending">Pending</option>
+                    <option value="Confirmed">Confirmed</option>
+                    <option value="Packed">Packed</option>
+                    <option value="Out for Delivery">Out for Delivery</option>
+                    <option value="Delivered">Delivered</option>
+                  </select>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
 };
 
 export default Orders;
