@@ -1,0 +1,16 @@
+{
+    "name": "amit-food-ecommerce",
+    "version": "1.0.0",
+    "description": "Root script to run both backend and frontend",
+    "scripts": {
+        "install-all": "npm install && cd backend && npm install && cd ../admin-panel && npm install",
+        "dev": "concurrently \"npm run dev --prefix backend\" \"npm run dev --prefix admin-panel\""
+    },
+    "devDependencies": {
+        "concurrently": "^8.2.2"
+    },
+    "dependencies": {
+        "bcryptjs": "^3.0.3",
+        "razorpay": "^2.9.6"
+    }
+}
