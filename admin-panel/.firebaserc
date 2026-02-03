@@ -1,0 +1,15 @@
+{
+  "projects": {
+    "default": "amit-food-production-425b0"
+  },
+  "targets": {
+    "amit-food-production-425b0": {
+      "hosting": {
+        "admin": [
+          "amit-admin-dd673"
+        ]
+      }
+    }
+  },
+  "etags": {}
+}

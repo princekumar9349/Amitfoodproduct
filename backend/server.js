@@ -5,11 +5,22 @@ const path = require("path");
 const connectDB = require("./config/db");
 
 dotenv.config();
+
 connectDB();
 
 const app = express();
 
-app.use(cors());
+const corsOptions = {
+  origin: [
+    "https://admin.amitfoodproduct.in",
+    "https://amitfoodproduct.in",
+    "http://localhost:5173",
+    "http://localhost:3000",
+  ],
+  credentials: true,
+};
+
+app.use(cors(corsOptions));
 app.use(express.json());
 
 // Routes
@@ -28,6 +39,8 @@ app.get("/", (req, res) => {
   // Server restarted via file touch (retry)
 });
 
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT || 8080;
 
-app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+app.listen(PORT, "0.0.0.0", () => {
+  console.log(`Server running on ${PORT}`);
+});

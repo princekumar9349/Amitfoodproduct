@@ -6,6 +6,7 @@ import {
 } from "react-router-dom";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+
 import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
 import AddProduct from "./pages/AddProduct";
@@ -14,14 +15,7 @@ import Orders from "./pages/Orders";
 import ProtectedRoute from "./components/ProtectedRoute";
 import Sidebar from "./components/Sidebar";
 
-// Temporary placeholder components to avoid build errors until implemented
-const DashboardPlaceholder = () => <div className="p-4">Dashboard (Todo)</div>;
-const ManageProductsPlaceholder = () => (
-  <div className="p-4">Manage Products (Todo)</div>
-);
-const OrdersPlaceholder = () => <div className="p-4">Orders (Todo)</div>;
-
-// Layout for protected routes (Sidebar + Content)
+// Layout for protected routes
 const Layout = ({ children }) => {
   return (
     <div className="flex min-h-screen bg-gray-100">
@@ -34,11 +28,13 @@ const Layout = ({ children }) => {
 function App() {
   return (
     <>
-      <ToastContainer />
+      <ToastContainer position="top-right" autoClose={3000} />
       <Router>
         <Routes>
+          {/* Public Route */}
           <Route path="/login" element={<Login />} />
 
+          {/* Protected Routes */}
           <Route element={<ProtectedRoute />}>
             <Route
               path="/dashboard"
@@ -72,7 +68,8 @@ function App() {
                 </Layout>
               }
             />
-            {/* Redirect root to dashboard */}
+
+            {/* Default redirect */}
             <Route path="/" element={<Navigate to="/dashboard" replace />} />
           </Route>
         </Routes>

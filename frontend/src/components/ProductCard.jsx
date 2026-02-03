@@ -7,6 +7,11 @@ import { Link } from "react-router-dom";
 const ProductCard = ({ product }) => {
   const { addToCart } = useCart();
 
+  // ✅ GCS Image URL (direct usage)
+  console.log("Product Data:", product);
+  const imageSrc = product?.image || "/fallback.jpg";
+  console.log("Image Source:", imageSrc);
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -18,22 +23,15 @@ const ProductCard = ({ product }) => {
         to={`/product/${product._id}`}
         className="block relative overflow-hidden"
       >
-        <div className="aspect-w-16 aspect-h-9 h-48 w-full bg-gray-100 flex items-center justify-center">
-          {product.image ? (
-            <img
-              src={
-                product.image
-                  ? product.image.startsWith("http")
-                    ? product.image
-                    : `${import.meta.env.VITE_API_BASE_URL || "http://localhost:5000"}/${product.image.replace(/\\/g, "/")}`
-                  : ""
-              }
-              alt={product.name}
-              className="object-cover w-full h-full group-hover:scale-105 transition-transform duration-300"
-            />
-          ) : (
-            <div className="text-gray-400">No Image</div>
-          )}
+        <div className="h-48 w-full bg-gray-100 flex items-center justify-center">
+          <img
+            src={imageSrc}
+            alt={product.name}
+            className="object-cover w-full h-full group-hover:scale-105 transition-transform duration-300"
+            onError={(e) => {
+              e.target.src = "/fallback.jpg";
+            }}
+          />
         </div>
       </Link>
 

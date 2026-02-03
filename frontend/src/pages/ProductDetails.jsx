@@ -55,9 +55,9 @@ const ProductDetails = () => {
                 {/* Product Image */}
                 <div className="md:w-1/2 mb-8 md:mb-0">
                     <div className="aspect-w-4 aspect-h-3 rounded-2xl overflow-hidden shadow-lg border border-gray-100 w-full h-96 bg-gray-50 flex items-center justify-center">
-                        {product.image ? (
+                        {product.imageUrl ? (
                             <img
-                                src={product.image}
+                                src={product.imageUrl}
                                 alt={product.name}
                                 className="w-full h-full object-cover hover:scale-105 transition-transform duration-500"
                             />
