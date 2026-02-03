@@ -148,7 +148,7 @@ const ManageProducts = () => {
               <tr key={product._id} className="border-b hover:bg-gray-50">
                 <td className="p-3">
                   <img
-                    src={product.imageUrl}
+                    src={product.image}
                     alt={product.name}
                     className="w-14 h-14 object-cover rounded"
                   />
