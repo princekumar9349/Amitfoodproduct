@@ -2,7 +2,11 @@ const mongoose = require("mongoose");
 
 const orderSchema = mongoose.Schema(
   {
-    userId: { type: String, required: true }, // Keeping flexible for now as User model wasn't requested
+    userId: {
+      type: mongoose.Schema.Types.Mixed,
+      required: true,
+    },
+
     products: [
       {
         productId: {
@@ -13,6 +17,7 @@ const orderSchema = mongoose.Schema(
         quantity: { type: Number, required: true },
       },
     ],
+
     totalAmount: { type: Number, required: true },
     paymentStatus: { type: String, default: "Pending" },
     orderStatus: {
@@ -21,13 +26,8 @@ const orderSchema = mongoose.Schema(
       default: "Pending",
     },
     address: { type: Object, required: true },
-    razorpayOrderId: { type: String },
-    razorpayPaymentId: { type: String },
-    razorpaySignature: { type: String },
   },
-  {
-    timestamps: true,
-  },
+  { timestamps: true }
 );
 
 module.exports = mongoose.model("Order", orderSchema);
