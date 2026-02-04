@@ -6,27 +6,51 @@ import {
 } from "recharts";
 import { 
   TrendingUp, ShoppingCart, Users, Package, 
-  Calendar, ArrowUpRight, AlertCircle 
+  Calendar, ArrowUpRight, AlertCircle, Loader2 
 } from "lucide-react";
+import { toast } from "react-toastify";
 
 const Dashboard = () => {
   const [orders, setOrders] = useState([]);
   const [products, setProducts] = useState([]);
   const [range, setRange] = useState(30);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchData = async () => {
-      const ordersRes = await api.get("/orders");
-      const productsRes = await api.get("/products");
-      setOrders(ordersRes.data);
-      setProducts(productsRes.data);
+      try {
+        const [ordersRes, productsRes] = await Promise.all([
+            api.get("/orders"),
+            api.get("/products")
+        ]);
+        
+        // Ensure we always set an array, even if API returns null/undefined
+        setOrders(Array.isArray(ordersRes.data) ? ordersRes.data : []);
+        setProducts(Array.isArray(productsRes.data) ? productsRes.data : []);
+      } catch (error) {
+        console.error("Error loading dashboard:", error);
+        toast.error("Failed to load dashboard data");
+      } finally {
+        setLoading(false);
+      }
     };
     fetchData();
   }, []);
 
-  // --- DATA PROCESSING ---
+  if (loading) {
+    return (
+        <div className="flex h-screen items-center justify-center">
+            <Loader2 className="animate-spin text-blue-600" size={40} />
+        </div>
+    );
+  }
+
+  // --- SAFE DATA PROCESSING ---
   const now = new Date();
+  
+  // Safe filter for orders
   const filteredOrders = orders.filter((o) => {
+    if (!o.createdAt) return false;
     const orderDate = new Date(o.createdAt);
     const diffDays = (now - orderDate) / (1000 * 60 * 60 * 24);
     return diffDays <= range;
@@ -36,32 +60,35 @@ const Dashboard = () => {
     (o) => o.paymentStatus === "Paid" && o.orderStatus !== "Cancelled"
   );
 
-  const revenue = paidOrders.reduce((sum, o) => sum + o.totalAmount, 0);
+  const revenue = paidOrders.reduce((sum, o) => sum + (o.totalAmount || 0), 0);
 
   // Daily Revenue Logic
   const dailyMap = {};
   paidOrders.forEach((order) => {
     const day = new Date(order.createdAt).toLocaleDateString('en-US', { day: 'numeric', month: 'short' });
     if (!dailyMap[day]) dailyMap[day] = 0;
-    dailyMap[day] += order.totalAmount;
+    dailyMap[day] += (order.totalAmount || 0);
   });
   const dailyData = Object.keys(dailyMap).map((day) => ({ day, revenue: dailyMap[day] }));
 
   // Top Products Logic
   const productSales = {};
   paidOrders.forEach((order) => {
-    order.products.forEach((p) => {
-      const name = p.productId?.name || "Unknown";
-      if (!productSales[name]) productSales[name] = 0;
-      productSales[name] += p.quantity;
-    });
+    if(order.products && Array.isArray(order.products)) {
+        order.products.forEach((p) => {
+        const name = p.productId?.name || "Unknown";
+        if (!productSales[name]) productSales[name] = 0;
+        productSales[name] += (p.quantity || 0);
+        });
+    }
   });
+  
   const topProducts = Object.keys(productSales)
     .map((name) => ({ name, quantity: productSales[name] }))
     .sort((a, b) => b.quantity - a.quantity)
     .slice(0, 5);
 
-  const lowStock = products.filter((p) => p.stock <= 5);
+  const lowStock = products.filter((p) => (p.stock || 0) <= 5);
 
   return (
     <div className="space-y-8">
@@ -123,9 +150,9 @@ const Dashboard = () => {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         
         {/* REVENUE CHART */}
-        <div className="lg:col-span-2 bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
+        <div className="lg:col-span-2 bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex flex-col h-[400px]">
             <h3 className="text-lg font-bold text-gray-800 mb-6">Revenue Overview</h3>
-            <div className="h-80">
+            <div className="flex-1 w-full min-h-0">
                 <ResponsiveContainer width="100%" height="100%">
                     <AreaChart data={dailyData}>
                         <defs>
@@ -147,9 +174,9 @@ const Dashboard = () => {
         </div>
 
         {/* TOP PRODUCTS */}
-        <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
+        <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex flex-col h-[400px]">
             <h3 className="text-lg font-bold text-gray-800 mb-6">Top Selling Items</h3>
-            <div className="h-80">
+            <div className="flex-1 w-full min-h-0">
                 <ResponsiveContainer width="100%" height="100%">
                     <BarChart data={topProducts} layout="vertical">
                         <CartesianGrid strokeDasharray="3 3" horizontal={true} vertical={false} stroke="#f3f4f6" />
@@ -163,7 +190,7 @@ const Dashboard = () => {
         </div>
       </div>
 
-      {/* RECENT ORDERS / LOW STOCK */}
+      {/* LOW STOCK & ACTIVITY */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
          {/* Low Stock List */}
          <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
@@ -194,7 +221,7 @@ const Dashboard = () => {
             )}
          </div>
 
-         {/* Recent Activity Mockup */}
+         {/* Recent Activity */}
          <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
             <h3 className="text-lg font-bold text-gray-800 mb-4">Recent Activity</h3>
             <div className="space-y-4">
@@ -206,18 +233,17 @@ const Dashboard = () => {
                             </div>
                             <div>
                                 <p className="text-sm font-bold text-gray-800">New Order from {order.userId?.name || 'Customer'}</p>
-                                <p className="text-xs text-gray-500">₹{order.totalAmount} • {order.products.length} Items</p>
+                                <p className="text-xs text-gray-500">₹{order.totalAmount} • {order.products?.length || 0} Items</p>
                             </div>
                         </div>
                         <span className="text-xs font-semibold bg-gray-100 px-2 py-1 rounded">
-                            {new Date(order.createdAt).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
+                            {order.createdAt ? new Date(order.createdAt).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : 'Just now'}
                         </span>
                     </div>
                 ))}
             </div>
          </div>
       </div>
-
     </div>
   );
 };
