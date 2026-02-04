@@ -135,7 +135,7 @@ const Home = () => {
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
               <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
             </span>
-            <span className="text-sm font-semibold text-orange-50 tracking-wide uppercase">#1 Food Delivery App</span>
+            <span className="text-sm font-semibold text-orange-50 tracking-wide uppercase">amit food product</span>
           </motion.div>
 
           <motion.h1
@@ -194,8 +194,8 @@ const Home = () => {
         <div className="bg-white rounded-[2rem] shadow-xl border border-gray-100 p-8 md:p-12 grid grid-cols-1 md:grid-cols-3 gap-8 divide-y md:divide-y-0 md:divide-x divide-gray-100">
           {[
             { icon: Leaf, title: "100% Organic", text: "Direct from local farmers", color: "text-green-600", bg: "bg-green-50" },
-            { icon: Truck, title: "30 Min Delivery", text: "Free shipping > ₹500", color: "text-orange-600", bg: "bg-orange-50" },
-            { icon: ShieldCheck, title: "Hygiene Rated", text: "FSSAI Certified Kitchens", color: "text-blue-600", bg: "bg-blue-50" }
+            { icon: Truck, title: "same day Delivery", text: "Free shipping > ₹500", color: "text-orange-600", bg: "bg-orange-50" },
+            { icon: ShieldCheck, title: "Hygiene Rated", text: " Clean Kitchens", color: "text-blue-600", bg: "bg-blue-50" }
           ].map((feature, i) => (
             <motion.div 
                 key={i} 

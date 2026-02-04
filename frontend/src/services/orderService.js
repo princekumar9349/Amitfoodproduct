@@ -2,8 +2,12 @@ import api from "./api";
 
 const orderService = {
   createOrder: async (orderData) => {
-    // orderData: { items, totalAmount, shippingAddress }
     const response = await api.post("/api/payment/create-order", orderData);
+    return response.data;
+  },
+
+  verifyPayment: async (paymentData) => {
+    const response = await api.post("/api/payment/verify", paymentData);
     return response.data;
   },
 

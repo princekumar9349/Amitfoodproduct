@@ -3,13 +3,14 @@ import { useNavigate, Link } from "react-router-dom";
 import authService from "../services/authService";
 import { toast } from "react-hot-toast";
 import { motion } from "framer-motion";
-import { Mail, Lock, Loader2, LogIn, ShieldCheck } from "lucide-react";
+import { Mail, Lock, Loader2, LogIn, ShieldCheck, Eye, EyeOff } from "lucide-react";
 
 const Login = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
+  const [showPassword, setShowPassword] = useState(false); // New State
   const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
@@ -17,7 +18,8 @@ const Login = () => {
     setLoading(true);
     
     try {
-      await authService.login(email, password);
+      // Pass rememberMe state to your service
+      await authService.login(email, password, rememberMe); 
       toast.success("Welcome back, Admin!");
       navigate("/dashboard");
     } catch (error) {
@@ -29,7 +31,6 @@ const Login = () => {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
-      
       <motion.div 
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -39,7 +40,6 @@ const Login = () => {
         {/* Header Section */}
         <div className="bg-gray-900 px-8 py-8 text-center relative overflow-hidden">
             <div className="absolute inset-0 bg-gradient-to-br from-orange-600/20 to-transparent pointer-events-none" />
-            
             <div className="inline-flex bg-white/10 p-3 rounded-xl mb-4 backdrop-blur-sm border border-white/10">
                 <ShieldCheck size={32} className="text-orange-500" />
             </div>
@@ -69,7 +69,7 @@ const Login = () => {
                     </div>
                 </div>
 
-                {/* Password */}
+                {/* Password with Toggle */}
                 <div>
                     <div className="flex justify-between items-center mb-1.5 ml-1">
                         <label className="block text-sm font-semibold text-gray-700">Password</label>
@@ -80,31 +80,38 @@ const Login = () => {
                             <Lock className="h-5 w-5 text-gray-400" />
                         </div>
                         <input
-                            type="password"
+                            type={showPassword ? "text" : "password"} // Dynamic Type
                             value={password}
                             onChange={(e) => setPassword(e.target.value)}
                             required
-                            className="block w-full pl-10 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-gray-900 focus:bg-white focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 transition-all outline-none"
+                            className="block w-full pl-10 pr-12 py-3 bg-gray-50 border border-gray-200 rounded-xl text-gray-900 focus:bg-white focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 transition-all outline-none"
                             placeholder="••••••••"
                         />
+                        {/* Toggle Button */}
+                        <button
+                            type="button"
+                            onClick={() => setShowPassword(!showPassword)}
+                            className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600 cursor-pointer"
+                        >
+                            {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                        </button>
                     </div>
                 </div>
 
-                {/* Remember Me Checkbox */}
+                {/* Remember Me */}
                 <div className="flex items-center">
                     <input
                         id="remember-me"
                         type="checkbox"
                         checked={rememberMe}
                         onChange={() => setRememberMe(!rememberMe)}
-                        className="h-4 w-4 text-orange-600 focus:ring-orange-500 border-gray-300 rounded cursor-pointer"
+                        className="h-4 w-4 text-orange-600 focus:ring-orange-500 border-gray-300 rounded cursor-pointer accent-orange-600"
                     />
                     <label htmlFor="remember-me" className="ml-2 block text-sm text-gray-600 cursor-pointer select-none">
                         Keep me logged in
                     </label>
                 </div>
 
-                {/* Button */}
                 <button
                     type="submit"
                     disabled={loading}

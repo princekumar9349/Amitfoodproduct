@@ -1,5 +1,5 @@
 const Product = require("../models/Product");
-const uploadToGCS = require("../utils/gcs");
+// Product Controller with Base64 Image Storage
 
 // @desc    Get all products with Search, Filter, Pagination & Sort
 // @route   GET /api/products?keyword=abc&category=Snacks&page=1&sort=price-asc
@@ -18,7 +18,7 @@ const getProducts = async (req, res) => {
 
     // 2. Build Filter (Category & Price)
     const filter = { ...keyword };
-    
+
     if (req.query.category && req.query.category !== "All") {
       filter.category = req.query.category;
     }
@@ -49,13 +49,12 @@ const getProducts = async (req, res) => {
       .skip(pageSize * (page - 1));
 
     // Return enhanced response object
-    res.json({ 
-        products, 
-        page, 
-        pages: Math.ceil(count / pageSize),
-        total: count 
+    res.json({
+      products,
+      page,
+      pages: Math.ceil(count / pageSize),
+      total: count,
     });
-
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: "Server Error" });
@@ -75,8 +74,8 @@ const getProductById = async (req, res) => {
     }
   } catch (error) {
     // Check if error is due to invalid ObjectId format
-    if (error.kind === 'ObjectId') {
-        return res.status(404).json({ message: "Product not found" });
+    if (error.kind === "ObjectId") {
+      return res.status(404).json({ message: "Product not found" });
     }
     res.status(500).json({ message: "Server Error" });
   }
@@ -99,18 +98,25 @@ const getCategories = async (req, res) => {
 // @access  Private/Admin
 const createProduct = async (req, res) => {
   try {
+    console.log("Create Product Request Body:", req.body);
+    console.log("Create Product File:", req.file);
+
     const { name, price, category, description, stock, unit } = req.body;
 
     // Basic Validation
     if (!name || !price || !category) {
-        return res.status(400).json({ message: "Please fill in all required fields" });
+      return res
+        .status(400)
+        .json({ message: "Please fill in all required fields" });
     }
 
     if (!req.file) {
       return res.status(400).json({ message: "Please upload an image" });
     }
 
-    const image = await uploadToGCS(req.file);
+    // Convert Buffer to Base64
+    const b64 = Buffer.from(req.file.buffer).toString("base64");
+    const image = "data:" + req.file.mimetype + ";base64," + b64;
 
     const product = new Product({
       name,
@@ -150,7 +156,8 @@ const updateProduct = async (req, res) => {
 
       if (req.file) {
         // Optional: Logic to delete old image from cloud storage could go here
-        product.image = await uploadToGCS(req.file);
+        const b64 = Buffer.from(req.file.buffer).toString("base64");
+        product.image = "data:" + req.file.mimetype + ";base64," + b64;
       }
 
       const updatedProduct = await product.save();
@@ -182,11 +189,11 @@ const deleteProduct = async (req, res) => {
   }
 };
 
-module.exports = { 
-    getProducts, 
-    getProductById, // ✅ Added
-    getCategories, 
-    createProduct, 
-    updateProduct, 
-    deleteProduct 
+module.exports = {
+  getProducts,
+  getProductById, // ✅ Added
+  getCategories,
+  createProduct,
+  updateProduct,
+  deleteProduct,
 };

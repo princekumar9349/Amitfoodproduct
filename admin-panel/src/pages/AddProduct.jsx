@@ -1,19 +1,29 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import api from "../services/api";
+import api from "../services/api"; // Ensure this path is correct
 import { toast } from "react-toastify";
 import { motion } from "framer-motion";
-import { 
-  Package, IndianRupee, Layers, FileText, 
-  Image as ImageIcon, Upload, Loader2, CheckCircle, 
-  Type, Scale, ArrowLeft
+import {
+  Package,
+  IndianRupee,
+  Layers,
+  FileText,
+  Image as ImageIcon,
+  Upload,
+  Loader2,
+  X,
+  Type,
+  Scale,
+  ArrowLeft,
+  Save,
 } from "lucide-react";
 
 const AddProduct = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [imagePreview, setImagePreview] = useState(null);
-  
+  const [isDragOver, setIsDragOver] = useState(false);
+
   const [formData, setFormData] = useState({
     name: "",
     price: "",
@@ -40,247 +50,307 @@ const AddProduct = () => {
     e.preventDefault();
     setLoading(true);
 
-    // Basic validation
+    // Strict Validation
+    if (!formData.name?.trim()) {
+      setLoading(false);
+      return toast.error("Product name is required");
+    }
     if (
-      !formData.name ||
       !formData.price ||
-      !formData.category ||
-      !image ||
-      !formData.stock ||
-      !formData.unit
+      isNaN(formData.price) ||
+      Number(formData.price) <= 0
     ) {
       setLoading(false);
-      return toast.error("Please fill all required fields");
+      return toast.error("Please enter a valid price");
+    }
+    if (!formData.category?.trim()) {
+      setLoading(false);
+      return toast.error("Category is required");
+    }
+    if (
+      !formData.stock ||
+      isNaN(formData.stock) ||
+      Number(formData.stock) < 0
+    ) {
+      setLoading(false);
+      return toast.error("Please enter a valid stock quantity");
+    }
+    if (!formData.unit?.trim()) {
+      setLoading(false);
+      return toast.error("Unit type (e.g., kg, pc) is required");
+    }
+    if (!image) {
+      setLoading(false);
+      return toast.error("Product image is required");
     }
 
     const data = new FormData();
-    data.append("name", formData.name);
-    data.append("price", formData.price);
-    data.append("category", formData.category);
-    data.append("description", formData.description);
+    Object.keys(formData).forEach((key) => data.append(key, formData[key]));
     data.append("image", image);
-    data.append("stock", formData.stock);
-    data.append("unit", formData.unit);
 
     try {
-      await api.post("/products", data, {
-        headers: {
-          "Content-Type": "multipart/form-data",
-        },
+      const response = await api.post("/products", data, {
+        headers: { "Content-Type": "multipart/form-data" },
       });
-      toast.success("Product successfully added to inventory!");
+      console.log("Product added:", response.data);
+      toast.success("Product successfully added!");
       navigate("/products");
     } catch (error) {
-      toast.error(error.response?.data?.message || "Failed to add product");
+      console.error("Add Product Error:", error);
+      const errorMessage =
+        error.response?.data?.message ||
+        error.message ||
+        "Failed to add product. Please try again.";
+      toast.error(errorMessage);
     } finally {
-        setLoading(false);
+      setLoading(false);
     }
   };
 
+  const removeImage = () => {
+    setImage(null);
+    setImagePreview(null);
+  };
+
   return (
-    <motion.div 
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="max-w-6xl mx-auto"
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      className="min-h-screen bg-gray-50/50 py-8 px-4 sm:px-6 lg:px-8"
     >
-      {/* HEADER */}
-      <div className="flex items-center gap-4 mb-8">
-        <button 
-            onClick={() => navigate(-1)} 
-            className="p-2 bg-white border border-gray-200 rounded-xl hover:bg-gray-50 text-gray-600 transition-colors"
+      <div className="max-w-7xl mx-auto">
+        {/* HEADER */}
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
+          <div className="flex items-center gap-4">
+            <button
+              onClick={() => navigate(-1)}
+              className="p-2.5 bg-white border border-gray-200 rounded-xl hover:bg-gray-50 text-gray-600 transition-all shadow-sm hover:shadow-md"
+            >
+              <ArrowLeft size={20} />
+            </button>
+            <div>
+              <h1 className="text-2xl md:text-3xl font-bold text-gray-900 tracking-tight">
+                Add New Product
+              </h1>
+              <p className="text-gray-500 text-sm mt-1">
+                Fill in the details to create a new inventory item.
+              </p>
+            </div>
+          </div>
+
+          <div className="flex gap-3">
+            <button
+              onClick={() => navigate(-1)}
+              className="px-6 py-2.5 rounded-xl border border-gray-300 text-gray-700 font-medium hover:bg-gray-50 transition-colors"
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+
+        <form
+          onSubmit={handleSubmit}
+          className="grid grid-cols-1 lg:grid-cols-12 gap-8"
         >
-            <ArrowLeft size={20} />
-        </button>
-        <div>
-            <h1 className="text-3xl font-bold text-gray-900">Add New Product</h1>
-            <p className="text-gray-500 mt-1">Create a new item in your inventory.</p>
-        </div>
+          {/* --- LEFT COLUMN: INPUTS (8 Columns) --- */}
+          <div className="lg:col-span-8 space-y-6">
+            {/* General Info Section */}
+            <div className="bg-white p-6 md:p-8 rounded-3xl shadow-xl shadow-gray-100 border border-gray-100">
+              <div className="flex items-center gap-3 mb-6 pb-4 border-b border-gray-50">
+                <div className="p-2 bg-blue-50 text-blue-600 rounded-lg">
+                  <Package size={20} />
+                </div>
+                <h3 className="text-lg font-bold text-gray-800">
+                  Product Details
+                </h3>
+              </div>
+
+              <div className="space-y-6">
+                <InputField
+                  label="Product Name"
+                  name="name"
+                  icon={Type}
+                  placeholder="e.g. Organic Basmati Rice"
+                  value={formData.name}
+                  onChange={handleChange}
+                />
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <InputField
+                    label="Category"
+                    name="category"
+                    icon={Layers}
+                    placeholder="e.g. Grains"
+                    value={formData.category}
+                    onChange={handleChange}
+                  />
+                  <InputField
+                    label="Unit Type"
+                    name="unit"
+                    icon={Scale}
+                    placeholder="e.g. kg, pc, box"
+                    value={formData.unit}
+                    onChange={handleChange}
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Description
+                  </label>
+                  <div className="relative">
+                    <FileText
+                      className="absolute left-4 top-3.5 text-gray-400"
+                      size={18}
+                    />
+                    <textarea
+                      name="description"
+                      rows="4"
+                      onChange={handleChange}
+                      placeholder="Describe the product features, benefits, and specifications..."
+                      className="w-full pl-11 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all outline-none resize-none"
+                    ></textarea>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Pricing Section */}
+            <div className="bg-white p-6 md:p-8 rounded-3xl shadow-xl shadow-gray-100 border border-gray-100">
+              <div className="flex items-center gap-3 mb-6 pb-4 border-b border-gray-50">
+                <div className="p-2 bg-green-50 text-green-600 rounded-lg">
+                  <IndianRupee size={20} />
+                </div>
+                <h3 className="text-lg font-bold text-gray-800">
+                  Pricing & Inventory
+                </h3>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <InputField
+                  label="Base Price (₹)"
+                  name="price"
+                  type="number"
+                  icon={IndianRupee}
+                  placeholder="0.00"
+                  value={formData.price}
+                  onChange={handleChange}
+                />
+                <InputField
+                  label="Stock Quantity"
+                  name="stock"
+                  type="number"
+                  icon={Package}
+                  placeholder="0"
+                  value={formData.stock}
+                  onChange={handleChange}
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* --- RIGHT COLUMN: MEDIA & ACTIONS (4 Columns) --- */}
+          <div className="lg:col-span-4 space-y-6">
+            {/* Image Upload */}
+            <div className="bg-white p-6 rounded-3xl shadow-xl shadow-gray-100 border border-gray-100">
+              <h3 className="text-lg font-bold text-gray-800 mb-4">
+                Product Image
+              </h3>
+
+              <div
+                className={`relative border-2 border-dashed rounded-2xl p-4 transition-all duration-300 ${
+                  imagePreview
+                    ? "border-blue-500 bg-blue-50/10"
+                    : "border-gray-300 hover:border-blue-400 hover:bg-gray-50"
+                }`}
+              >
+                <input
+                  type="file"
+                  onChange={handleImageChange}
+                  className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-20"
+                  accept="image/*"
+                  disabled={!!imagePreview}
+                />
+
+                {imagePreview ? (
+                  <div className="relative z-10">
+                    <img
+                      src={imagePreview}
+                      alt="Preview"
+                      className="w-full h-64 object-cover rounded-xl shadow-sm"
+                    />
+                    <button
+                      type="button"
+                      onClick={removeImage}
+                      className="absolute top-2 right-2 bg-white/90 backdrop-blur-sm p-2 rounded-full text-red-500 hover:bg-red-50 hover:text-red-600 transition-all shadow-md z-30"
+                    >
+                      <X size={18} />
+                    </button>
+                  </div>
+                ) : (
+                  <div className="flex flex-col items-center justify-center py-12 text-center">
+                    <div className="bg-blue-50 p-4 rounded-full mb-3 text-blue-500">
+                      <ImageIcon size={28} />
+                    </div>
+                    <p className="font-medium text-gray-900">Click to upload</p>
+                    <p className="text-xs text-gray-400 mt-1">
+                      SVG, PNG, JPG or GIF (max 5MB)
+                    </p>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Publish Action */}
+            <div className="bg-white p-6 rounded-3xl shadow-xl shadow-gray-100 border border-gray-100 sticky top-6">
+              <div className="flex items-center justify-between mb-4">
+                <span className="text-gray-600 font-medium">Status</span>
+                <span className="px-3 py-1 bg-gray-100 text-gray-600 text-xs rounded-full font-bold uppercase tracking-wider">
+                  Draft
+                </span>
+              </div>
+
+              <button
+                type="submit"
+                disabled={loading}
+                className="w-full bg-gray-900 text-white font-bold py-4 px-6 rounded-xl shadow-lg shadow-gray-900/10 hover:shadow-gray-900/20 hover:-translate-y-0.5 transition-all disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center gap-2 group"
+              >
+                {loading ? (
+                  <Loader2 className="animate-spin" />
+                ) : (
+                  <Save
+                    size={20}
+                    className="group-hover:scale-110 transition-transform"
+                  />
+                )}
+                {loading ? "Publishing..." : "Publish Product"}
+              </button>
+            </div>
+          </div>
+        </form>
       </div>
-
-      <form onSubmit={handleSubmit} className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        
-        {/* --- LEFT COLUMN: DETAILS --- */}
-        <div className="lg:col-span-2 space-y-6">
-            
-            {/* General Info Card */}
-            <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
-                <h3 className="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
-                    <Package className="text-orange-500" size={20} /> General Information
-                </h3>
-                
-                <div className="space-y-4">
-                    <div>
-                        <label className="block text-sm font-semibold text-gray-700 mb-1.5">Product Name</label>
-                        <div className="relative">
-                            <Type className="absolute left-3 top-3.5 text-gray-400" size={18} />
-                            <input
-                                type="text"
-                                name="name"
-                                onChange={handleChange}
-                                placeholder="e.g. Organic Basmati Rice"
-                                className="w-full pl-10 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 transition-all outline-none"
-                                required
-                            />
-                        </div>
-                    </div>
-
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div>
-                            <label className="block text-sm font-semibold text-gray-700 mb-1.5">Category</label>
-                            <div className="relative">
-                                <Layers className="absolute left-3 top-3.5 text-gray-400" size={18} />
-                                <input
-                                    type="text"
-                                    name="category"
-                                    onChange={handleChange}
-                                    placeholder="e.g. Grains"
-                                    className="w-full pl-10 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 transition-all outline-none"
-                                    required
-                                />
-                            </div>
-                        </div>
-                        <div>
-                            <label className="block text-sm font-semibold text-gray-700 mb-1.5">Description</label>
-                            <div className="relative">
-                                <FileText className="absolute left-3 top-3.5 text-gray-400" size={18} />
-                                <input
-                                    type="text"
-                                    name="description"
-                                    onChange={handleChange}
-                                    placeholder="Short description..."
-                                    className="w-full pl-10 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 transition-all outline-none"
-                                    required
-                                />
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            {/* Pricing & Stock Card */}
-            <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
-                <h3 className="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
-                    <IndianRupee className="text-green-600" size={20} /> Pricing & Inventory
-                </h3>
-                
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <div>
-                        <label className="block text-sm font-semibold text-gray-700 mb-1.5">Price (₹)</label>
-                        <div className="relative">
-                            <div className="absolute left-3 top-3.5 text-gray-500 font-bold">₹</div>
-                            <input
-                                type="number"
-                                name="price"
-                                onChange={handleChange}
-                                placeholder="0.00"
-                                className="w-full pl-8 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 transition-all outline-none"
-                                required
-                            />
-                        </div>
-                    </div>
-                    <div>
-                        <label className="block text-sm font-semibold text-gray-700 mb-1.5">Stock Quantity</label>
-                        <div className="relative">
-                            <Package className="absolute left-3 top-3.5 text-gray-400" size={18} />
-                            <input
-                                type="number"
-                                name="stock"
-                                onChange={handleChange}
-                                placeholder="0"
-                                className="w-full pl-10 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 transition-all outline-none"
-                                required
-                            />
-                        </div>
-                    </div>
-                    <div>
-                        <label className="block text-sm font-semibold text-gray-700 mb-1.5">Unit</label>
-                        <div className="relative">
-                            <Scale className="absolute left-3 top-3.5 text-gray-400" size={18} />
-                            <input
-                                type="text"
-                                name="unit"
-                                onChange={handleChange}
-                                placeholder="e.g. kg, pc"
-                                className="w-full pl-10 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 transition-all outline-none"
-                                required
-                            />
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        {/* --- RIGHT COLUMN: IMAGE & ACTIONS --- */}
-        <div className="space-y-6">
-            
-            {/* Image Upload Card */}
-            <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
-                <h3 className="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
-                    <ImageIcon className="text-blue-500" size={20} /> Product Image
-                </h3>
-
-                <div className="relative group">
-                    <div className={`border-2 border-dashed rounded-2xl p-4 flex flex-col items-center justify-center min-h-[250px] transition-all ${imagePreview ? 'border-orange-500 bg-orange-50' : 'border-gray-300 hover:border-orange-400 hover:bg-gray-50'}`}>
-                        
-                        {imagePreview ? (
-                            <div className="relative w-full h-full">
-                                <img 
-                                    src={imagePreview} 
-                                    alt="Preview" 
-                                    className="w-full h-48 object-contain rounded-lg shadow-sm"
-                                />
-                                <button
-                                    type="button"
-                                    onClick={() => { setImage(null); setImagePreview(null); }}
-                                    className="absolute -top-2 -right-2 bg-red-500 text-white p-1 rounded-full shadow-md hover:bg-red-600 transition-colors"
-                                >
-                                    <ArrowLeft size={16} className="rotate-45" /> {/* Using rotate arrow as X */}
-                                </button>
-                                <p className="text-xs text-center text-green-600 font-bold mt-2 flex items-center justify-center gap-1">
-                                    <CheckCircle size={12} /> Image Selected
-                                </p>
-                            </div>
-                        ) : (
-                            <>
-                                <div className="bg-blue-50 p-4 rounded-full mb-3 group-hover:scale-110 transition-transform">
-                                    <Upload className="text-blue-500" size={24} />
-                                </div>
-                                <p className="text-sm font-semibold text-gray-700">Click to upload image</p>
-                                <p className="text-xs text-gray-400 mt-1">SVG, PNG, JPG or GIF</p>
-                            </>
-                        )}
-
-                        <input
-                            type="file"
-                            onChange={handleImageChange}
-                            className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-                            accept="image/*"
-                            required={!image}
-                        />
-                    </div>
-                </div>
-            </div>
-
-            {/* Actions */}
-            <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
-                <button
-                    type="submit"
-                    disabled={loading}
-                    className="w-full bg-gray-900 text-white font-bold py-4 px-6 rounded-xl shadow-lg hover:bg-orange-600 hover:shadow-orange-500/30 transition-all disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-                >
-                    {loading ? <Loader2 className="animate-spin" /> : <Package size={20} />}
-                    {loading ? 'Publishing...' : 'Publish Product'}
-                </button>
-                <p className="text-xs text-center text-gray-400 mt-4">
-                    Double-check details before publishing.
-                </p>
-            </div>
-
-        </div>
-
-      </form>
     </motion.div>
   );
 };
+
+// Reusable Helper Component for cleaner code
+const InputField = ({ label, icon: Icon, type = "text", ...props }) => (
+  <div>
+    <label className="block text-sm font-medium text-gray-700 mb-2">
+      {label}
+    </label>
+    <div className="relative group">
+      <Icon
+        className="absolute left-4 top-3.5 text-gray-400 group-focus-within:text-blue-500 transition-colors"
+        size={18}
+      />
+      <input
+        type={type}
+        {...props}
+        className="w-full pl-11 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all outline-none font-medium text-gray-800 placeholder:text-gray-400"
+      />
+    </div>
+  </div>
+);
 
 export default AddProduct;
